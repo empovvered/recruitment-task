@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Recruitment task
 
-## Getting Started
+Proof of concept built on Next.js 16 (App Router), React 19 and Tailwind CSS 4. Formatting, linting, commit
+conventions and git hooks are configured and enforced; see Conventions below. Kept to what a POC actually
+needs.
 
-First, run the development server:
+## Setup
+
+Requires Node.js 22 (22.12.0 or newer) and pnpm 10.22.0. `corepack enable` picks the right pnpm up from the
+`packageManager` field.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install   # also runs `prepare`, which installs the git hooks
+pnpm dev       # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If git reports that a hook `was ignored because it's not set as executable`, run `chmod ug+x .husky/*`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command            | What it does                                                          |
+| ------------------ | --------------------------------------------------------------------- |
+| `pnpm dev`         | Start the development server on port 3000                             |
+| `pnpm build`       | Production build                                                      |
+| `pnpm start`       | Serve the production build                                            |
+| `pnpm lint`        | Run ESLint over the repository                                        |
+| `pnpm lint:fix`    | Run ESLint and apply every autofix                                    |
+| `pnpm format`      | Rewrite the tree with Prettier                                        |
+| `pnpm format:check`| Fail if anything is not Prettier-formatted                            |
+| `pnpm typecheck`   | Generate Next's route types, then type-check with no emit             |
 
-## Learn More
+## Conventions
 
-To learn more about Next.js, take a look at the following resources:
+### Commits and branches
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org): `type(scope)?: subject`,
+where `type` is one of `feat`, `fix`, `chore`, `docs`, `refactor`, `test` or `ci`. This is enforced by
+commitlint in the `commit-msg` hook, so a malformed message is rejected before the commit is created.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Branch names must be `main`, `develop`, or `feature|bugfix|hotfix|release|chore/<name>`. This is checked in
+`pre-commit`.
 
-## Deploy on Vercel
+### Code style
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Prettier owns formatting: no semicolons, double quotes, 120 columns, trailing commas, and Tailwind classes
+sorted by `prettier-plugin-tailwindcss`. ESLint layers the Next.js core-web-vitals and TypeScript presets on
+top, and adds `prettier/prettier`, sorted imports, `@stylistic` blank-line rules, `type` over `interface`,
+and a ban on `any`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Two hooks keep this honest: `pre-commit` runs lint-staged (`tsc`, `eslint --fix`, `prettier --write` over the
+staged files only), and `pre-push` runs `pnpm typecheck` and `pnpm lint` over the whole repository.
