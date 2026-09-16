@@ -5,5 +5,7 @@ export type ApplicationsTableProps = {
   rows: ApplicationRow[]
   isLoading?: boolean
   isError?: boolean
+  /** True while a retry is in flight; the error state reflects it instead of looking inert. */
+  isRetrying?: boolean
   onRetry?: () => void
 }

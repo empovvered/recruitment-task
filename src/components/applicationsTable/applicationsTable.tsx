@@ -21,7 +21,14 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: "Odrzucony",
 }
 
-export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }: ApplicationsTableProps) => {
+export const ApplicationsTable = ({
+  columns,
+  rows,
+  isLoading,
+  isError,
+  isRetrying,
+  onRetry,
+}: ApplicationsTableProps) => {
   const { sorting, setSorting, columnFilters, status, setStatus, search, setSearch, pagination, setPagination } =
     useQueryTableState()
 
@@ -43,7 +50,7 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
     matchesSearch(row.original, searchableColumns, String(value))
 
   if (isError) {
-    return <ErrorState title="Nie udało się pobrać wniosków." onRetry={onRetry} />
+    return <ErrorState title="Nie udało się pobrać wniosków." onRetry={onRetry} isRetrying={isRetrying} />
   }
 
   return (

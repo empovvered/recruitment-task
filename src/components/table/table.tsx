@@ -98,8 +98,13 @@ export const Table = <Data, Value>({
   return (
     <div
       data-testid={testId}
+      aria-busy={isLoading}
       className={cn("overflow-x-auto rounded-lg border border-slate-200 bg-white", classNames?.wrapper, className)}
     >
+      {/* Skeleton cells are a visual cue only; a screen reader needs the state said out loud. */}
+      <p role="status" className="sr-only">
+        {isLoading ? "Ładowanie wniosków" : `Załadowano ${table.getFilteredRowModel().rows.length} wniosków`}
+      </p>
       <table className={cn("w-full border-collapse", classNames?.table)}>
         <TableHead>
           {table.getHeaderGroups().map((headerGroup) => (

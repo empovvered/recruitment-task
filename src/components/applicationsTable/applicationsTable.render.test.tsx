@@ -95,4 +95,23 @@ describe("ApplicationsTable", () => {
 
     expect(onRetry).toHaveBeenCalledOnce()
   })
+
+  it("shows a retry in flight instead of leaving the button looking inert", () => {
+    render(<ApplicationsTable columns={columns} rows={[]} isError isRetrying onRetry={() => undefined} />)
+
+    const retry = screen.getByRole("button", { name: /Ponawianie/ })
+
+    expect(retry).toBeDisabled()
+    expect(screen.queryByRole("button", { name: /Spróbuj ponownie/ })).not.toBeInTheDocument()
+  })
+
+  it("says the loading state out loud, because skeleton cells are visual only", () => {
+    const { rerender } = render(<ApplicationsTable columns={columns} rows={[]} isLoading />)
+
+    expect(screen.getByRole("status")).toHaveTextContent("Ładowanie wniosków")
+
+    rerender(<ApplicationsTable columns={columns} rows={rows} />)
+
+    expect(screen.getByRole("status")).toHaveTextContent(`Załadowano ${rows.length} wniosków`)
+  })
 })
