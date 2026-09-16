@@ -21,11 +21,17 @@
     ],
     "baseUrl": "./",
     "paths": {
-      "api/*": ["api/*"],
-      "constants/*": ["constants/*"],
+      "api/*": ["src/api/*"],
+      "app/*": ["src/app/*"],
+      "components/*": ["src/components/*"],
+      "constants/*": ["src/constants/*"],
       "data/*": ["data/*"],
-      "providers/*": ["providers/*"],
-      "types/*": ["types/*"]
+      "hooks/*": ["src/hooks/*"],
+      "providers/*": ["src/providers/*"],
+      "tests": ["src/tests"],
+      "tests/*": ["src/tests/*"],
+      "types/*": ["src/types/*"],
+      "utils/*": ["src/utils/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts", "**/*.mts"],

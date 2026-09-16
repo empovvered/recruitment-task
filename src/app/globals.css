@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/*
+  The panel is written in a single light palette. The scaffold shipped a dark override that only
+  repainted the page behind components that stayed light, which left the heading and the field
+  labels unreadable. One committed scheme is cheaper here than a second set of tokens.
+*/
+:root {
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
