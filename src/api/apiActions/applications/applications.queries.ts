@@ -21,8 +21,10 @@ const FALLBACK_ERROR_MESSAGE = "Serwer nie zwrócił powodu niepowodzenia."
 const readErrorMessage = async (response: Response) => {
   try {
     const body = (await response.json()) as { message?: unknown }
+    //INFO: An empty string is a present-but-useless message; it would blank the reason the user sees
+    const message = typeof body.message === "string" ? body.message.trim() : ""
 
-    return typeof body.message === "string" ? body.message : FALLBACK_ERROR_MESSAGE
+    return message || FALLBACK_ERROR_MESSAGE
   } catch {
     return FALLBACK_ERROR_MESSAGE
   }
@@ -34,7 +36,7 @@ const getApplications = async (scenario: ApplicationsScenario, signal: AbortSign
   const response = await fetch(query ? `/api/applications?${query}` : "/api/applications", { signal })
 
   //INFO: React Query reports isError only when the query function throws
-  if (!response.ok) throw new ApplicationsRequestError(response.status, await readErrorMessage(response))
+  if (!response.ok) throw new ApplicationsRequestError(await readErrorMessage(response))
 
   return (await response.json()) as ApplicationsPayload
 }

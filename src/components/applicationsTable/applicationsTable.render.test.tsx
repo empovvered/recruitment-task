@@ -39,7 +39,7 @@ const rowFor = (loanId: string) => screen.getByRole("row", { name: new RegExp(lo
 
 describe("ApplicationsTable", () => {
   it("says what the server reported instead of a generic line", () => {
-    const error = new ApplicationsRequestError(500, "Usługa wniosków jest chwilowo niedostępna.")
+    const error = new ApplicationsRequestError("Usługa wniosków jest chwilowo niedostępna.")
 
     render(<ApplicationsTable columns={[]} rows={[]} isError error={error} />)
 

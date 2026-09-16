@@ -1,15 +1,15 @@
 /**
- * Carries what the response said rather than a string written at the call site. The two failures the
- * route can report — the service being unavailable and the fixtures not matching their contract — are
- * different problems, and a reader who sees only "could not load" looks in the wrong place.
+ * Carries what the response said rather than a string written at the call site. The route reports
+ * an unavailable service and fixtures that do not match their contract differently, and a reader who
+ * sees only "could not load" looks in the wrong place.
+ *
+ * The type exists so the panel can tell a message it may show from one it may not: a network failure
+ * surfaces as a plain Error whose text is written for developers.
  */
 export class ApplicationsRequestError extends Error {
-  readonly status: number
-
-  constructor(status: number, message: string) {
+  constructor(message: string) {
     super(message)
     this.name = "ApplicationsRequestError"
-    this.status = status
   }
 }
 
