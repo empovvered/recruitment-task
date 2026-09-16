@@ -37,6 +37,23 @@ const rows: ApplicationRow[] = [
 const rowFor = (loanId: string) => screen.getByRole("row", { name: new RegExp(loanId) })
 
 describe("ApplicationsTable", () => {
+  //INFO: A pasted link can name a column the metadata has not delivered yet; the table must not be
+  //handed a sort or a filter for a column that does not exist
+  it("ignores a sort from the URL until the column it names exists", () => {
+    const warn = vi.spyOn(console, "error").mockImplementation(() => undefined)
+
+    render(<ApplicationsTable columns={[]} rows={[]} isLoading />, { searchParams: "?sort=updatedAt&order=desc" })
+
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it("applies that sort once the metadata arrives", () => {
+    render(<ApplicationsTable columns={columns} rows={rows} />, { searchParams: "?sort=customerName&order=desc" })
+
+    expect(screen.getByRole("columnheader", { name: /Klient/ })).toHaveAttribute("aria-sort", "descending")
+  })
+
   it("builds its header from the metadata and omits a hidden column", () => {
     render(<ApplicationsTable columns={columns} rows={rows} />)
 

@@ -1,10 +1,15 @@
 import { render as baseRender, RenderOptions } from "@testing-library/react"
 import { ReactElement } from "react"
 
-import { Wrapper } from "./wrapper"
+import { Wrapper, WrapperProps } from "./wrapper"
 
-const render = (ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) =>
-  baseRender(ui, { wrapper: Wrapper, ...options })
+type CustomRenderOptions = Omit<RenderOptions, "wrapper"> & Pick<WrapperProps, "searchParams">
+
+const render = (ui: ReactElement, { searchParams, ...options }: CustomRenderOptions = {}) =>
+  baseRender(ui, {
+    wrapper: ({ children }) => <Wrapper searchParams={searchParams}>{children}</Wrapper>,
+    ...options,
+  })
 
 export * from "@testing-library/react"
 export { render }

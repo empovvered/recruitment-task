@@ -35,6 +35,19 @@ export const ApplicationsTable = ({
   const columnDefs = useMemo(() => buildColumnDefs(columns), [columns])
   const searchableColumns = useMemo(() => getSearchableColumns(columns), [columns])
 
+  /**
+   * The view state comes from the URL, so it can name a column the metadata has not delivered yet:
+   * on the first load `columns` is still empty while `?sort=updatedAt` is already set. Handing that
+   * to the table makes it warn about a column that does not exist. The URL keeps the value, so the
+   * sort applies by itself once the metadata arrives.
+   */
+  const columnIds = useMemo(() => new Set(columnDefs.map(({ id }) => id)), [columnDefs])
+  const knownSorting = useMemo(() => sorting.filter(({ id }) => columnIds.has(id)), [sorting, columnIds])
+  const knownColumnFilters = useMemo(
+    () => columnFilters.filter(({ id }) => columnIds.has(id)),
+    [columnFilters, columnIds],
+  )
+
   // The status options come from the metadata, so a new status in the JSON appears in the filter.
   const statusFilterOptions = useMemo(() => {
     const statusColumn = columns.find((column) => column.type === "badge")
@@ -82,9 +95,9 @@ export const ApplicationsTable = ({
         pageSizes={PAGE_SIZES}
         emptyState={<p className="text-slate-500">Brak wniosków spełniających kryteria.</p>}
         globalFilterFn={searchFilterFn}
-        sorting={sorting}
+        sorting={knownSorting}
         setSorting={setSorting}
-        columnFilters={columnFilters}
+        columnFilters={knownColumnFilters}
         setColumnFilters={() => undefined}
         globalFilter={search}
         setGlobalFilter={(updater) => setSearch(String(typeof updater === "function" ? updater(search) : updater))}
