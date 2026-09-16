@@ -71,6 +71,9 @@ export const Table = <Data, Value>({
       ...(pagination ? { pagination: getPaginationWithPageIndexOffset(pagination) } : {}),
     },
     pageCount,
+    //INFO: The page is reset deliberately when a filter narrows the result. Leaving the automatic reset on
+    //would also fire when the rows arrive, throwing away a page number restored from the URL.
+    autoResetPageIndex: false,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,

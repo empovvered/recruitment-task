@@ -1,13 +1,13 @@
 "use client"
 
-import type { FilterFn, OnChangeFn, PaginationState, SortingState } from "@tanstack/react-table"
+import type { FilterFn } from "@tanstack/react-table"
 import type { ApplicationRow } from "api/apiActions/applications/applications.types"
 import { Table } from "components/table/table"
-import { useMemo, useReducer } from "react"
+import { PAGE_SIZES } from "constants/pagination"
+import { useQueryTableState } from "hooks/useQueryTableState/useQueryTableState"
+import { useMemo } from "react"
 
 import { buildColumnDefs } from "./applicationsTable.columns"
-import { PAGE_SIZES } from "./applicationsTable.constants"
-import { initialTableViewState, STATUS_COLUMN_ID, tableViewReducer } from "./applicationsTable.state"
 import type { ApplicationsTableProps } from "./applicationsTable.types"
 import { getSearchableColumns, matchesSearch } from "./applicationsTable.utils"
 
@@ -19,7 +19,8 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }: ApplicationsTableProps) => {
-  const [view, dispatch] = useReducer(tableViewReducer, initialTableViewState)
+  const { sorting, setSorting, columnFilters, status, setStatus, search, setSearch, pagination, setPagination } =
+    useQueryTableState()
 
   const columnDefs = useMemo(() => buildColumnDefs(columns), [columns])
   const searchableColumns = useMemo(() => getSearchableColumns(columns), [columns])
@@ -49,8 +50,6 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
     )
   }
 
-  const selectedStatus = String(view.columnFilters.find(({ id }) => id === STATUS_COLUMN_ID)?.value ?? "")
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
@@ -58,8 +57,8 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
           <span className="font-medium text-slate-700">Szukaj</span>
           <input
             type="search"
-            value={view.globalFilter}
-            onChange={(event) => dispatch({ type: "setSearch", search: event.target.value })}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="ID wniosku lub klient"
             className="w-64 rounded border border-slate-300 px-3 py-2"
           />
@@ -67,14 +66,14 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-slate-700">Status</span>
           <select
-            value={selectedStatus}
-            onChange={(event) => dispatch({ type: "setStatus", status: event.target.value })}
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
             className="rounded border border-slate-300 px-3 py-2"
           >
             <option value="">Wszystkie</option>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {STATUS_LABELS[status] ?? status}
+            {statusOptions.map((option) => (
+              <option key={option} value={option}>
+                {STATUS_LABELS[option] ?? option}
               </option>
             ))}
           </select>
@@ -89,30 +88,14 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
         pageSizes={PAGE_SIZES}
         emptyState={<p className="text-slate-500">Brak wniosków spełniających kryteria.</p>}
         globalFilterFn={searchFilterFn}
-        sorting={view.sorting}
-        setSorting={
-          ((updater) => {
-            const next = typeof updater === "function" ? updater(view.sorting as SortingState) : updater
-
-            dispatch({ type: "setSorting", sorting: next })
-          }) as OnChangeFn<SortingState>
-        }
-        columnFilters={view.columnFilters}
+        sorting={sorting}
+        setSorting={setSorting}
+        columnFilters={columnFilters}
         setColumnFilters={() => undefined}
-        globalFilter={view.globalFilter}
-        setGlobalFilter={(updater) => {
-          const next = typeof updater === "function" ? updater(view.globalFilter) : updater
-
-          dispatch({ type: "setSearch", search: String(next) })
-        }}
-        pagination={view.pagination}
-        setPagination={
-          ((updater) => {
-            const next = typeof updater === "function" ? updater(view.pagination as PaginationState) : updater
-
-            dispatch({ type: "setPagination", pagination: next })
-          }) as OnChangeFn<PaginationState>
-        }
+        globalFilter={search}
+        setGlobalFilter={(updater) => setSearch(String(typeof updater === "function" ? updater(search) : updater))}
+        pagination={pagination}
+        setPagination={setPagination}
       />
     </div>
   )

@@ -1,6 +1,6 @@
-import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ApplicationRow, ColumnMeta } from "api/apiActions/applications/applications.types"
+import { render, screen, waitFor, within } from "tests"
 
 import { ApplicationsTable } from "./applicationsTable"
 
@@ -71,8 +71,9 @@ describe("ApplicationsTable", () => {
     render(<ApplicationsTable columns={columns} rows={rows} />)
     await user.type(screen.getByRole("searchbox", { name: /Szukaj/ }), "wozniak")
 
+    //INFO: The view state round-trips through the URL, so the narrowing lands on a later tick
+    await waitFor(() => expect(screen.queryByText("LN-2")).not.toBeInTheDocument())
     expect(screen.getByText("LN-1")).toBeInTheDocument()
-    expect(screen.queryByText("LN-2")).not.toBeInTheDocument()
   })
 
   it("filters by the status taken from the metadata options", async () => {
@@ -81,8 +82,8 @@ describe("ApplicationsTable", () => {
     render(<ApplicationsTable columns={columns} rows={rows} />)
     await user.selectOptions(screen.getByRole("combobox", { name: /Status/ }), "new")
 
+    await waitFor(() => expect(screen.queryByText("LN-1")).not.toBeInTheDocument())
     expect(screen.getByText("LN-2")).toBeInTheDocument()
-    expect(screen.queryByText("LN-1")).not.toBeInTheDocument()
   })
 
   it("offers a retry from the error state", async () => {

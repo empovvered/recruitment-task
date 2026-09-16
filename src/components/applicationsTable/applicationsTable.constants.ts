@@ -12,6 +12,4 @@ export const CURRENCY_BY_MARKET: Record<string, string> = {
 
 export const MISSING_VALUE = "—"
 
-export const DEFAULT_PAGE_SIZE = 25
-
-export const PAGE_SIZES = [25, 50, 100]
+export const STATUS_COLUMN_ID = "status"
