@@ -26,7 +26,7 @@ export const Pagination = ({
     <span>
       Strona {pageIndex + 1} z {Math.max(pageCount, 1)} · {totalRows} wniosków
     </span>
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
       {pageSizes && pageSizes.length > 0 && (
         <Select
           label="Na stronę"

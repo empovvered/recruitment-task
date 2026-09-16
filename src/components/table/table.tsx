@@ -108,51 +108,57 @@ export const Table = <Data, Value>({
     <div
       data-testid={testId}
       aria-busy={isLoading}
-      className={cn("overflow-x-auto rounded-lg border border-slate-200 bg-white", classNames?.wrapper, className)}
+      className={cn("rounded-lg border border-slate-200 bg-white", classNames?.wrapper, className)}
     >
       {/* Skeleton cells are a visual cue only; a screen reader needs the state said out loud. */}
       <p role="status" className="sr-only">
         {isLoading ? "Ładowanie wniosków" : `Załadowano ${table.getFilteredRowModel().rows.length} wniosków`}
       </p>
-      <table className={cn("w-full border-collapse", classNames?.table)}>
-        <TableCaption className="sr-only">{caption}</TableCaption>
-        <TableHead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHeadCell key={header.id} header={header} />
-              ))}
-            </tr>
-          ))}
-        </TableHead>
-        <TableBody>
-          {isLoading && !hasColumnsToSkeleton ? (
-            <tr>
-              <td className="px-4 py-6">
-                <span className="flex flex-col gap-3">
-                  {Array.from({ length: LOADING_ROW_COUNT }, (_, index) => (
-                    <Skeleton key={index} className="h-5 w-full" />
-                  ))}
-                </span>
-              </td>
-            </tr>
-          ) : isEmpty ? (
-            <tr>
-              <td colSpan={table.getAllColumns().length} className="px-4 py-10 text-center">
-                {emptyState}
-              </td>
-            </tr>
-          ) : (
-            bodyRows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+      {/*
+       * Only the table scrolls sideways. With the pagination inside this box too, reaching the last
+       * column on a phone pushed the page controls off screen along with it.
+       */}
+      <div className="overflow-x-auto">
+        <table className={cn("w-full border-collapse", classNames?.table)}>
+          <TableCaption className="sr-only">{caption}</TableCaption>
+          <TableHead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHeadCell key={header.id} header={header} />
                 ))}
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </table>
+              </tr>
+            ))}
+          </TableHead>
+          <TableBody>
+            {isLoading && !hasColumnsToSkeleton ? (
+              <tr>
+                <td className="px-4 py-6">
+                  <span className="flex flex-col gap-3">
+                    {Array.from({ length: LOADING_ROW_COUNT }, (_, index) => (
+                      <Skeleton key={index} className="h-5 w-full" />
+                    ))}
+                  </span>
+                </td>
+              </tr>
+            ) : isEmpty ? (
+              <tr>
+                <td colSpan={table.getAllColumns().length} className="px-4 py-10 text-center">
+                  {emptyState}
+                </td>
+              </tr>
+            ) : (
+              bodyRows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </table>
+      </div>
       {hasPagination && !isEmpty && !isLoading && (
         <Pagination
           pageIndex={table.getState().pagination.pageIndex}
