@@ -2,6 +2,8 @@
 
 import type { FilterFn } from "@tanstack/react-table"
 import type { ApplicationRow } from "api/apiActions/applications/applications.types"
+import { Select } from "components/form/fields/select/select"
+import { Search } from "components/search/search"
 import { Table } from "components/table/table"
 import { PAGE_SIZES } from "constants/pagination"
 import { useQueryTableState } from "hooks/useQueryTableState/useQueryTableState"
@@ -26,10 +28,14 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
   const searchableColumns = useMemo(() => getSearchableColumns(columns), [columns])
 
   // The status options come from the metadata, so a new status in the JSON appears in the filter.
-  const statusOptions = useMemo(() => {
+  const statusFilterOptions = useMemo(() => {
     const statusColumn = columns.find((column) => column.type === "badge")
+    const options = statusColumn?.type === "badge" ? statusColumn.options : []
 
-    return statusColumn?.type === "badge" ? statusColumn.options : []
+    return [
+      { value: "", label: "Wszystkie" },
+      ...options.map((option) => ({ value: option, label: STATUS_LABELS[option] ?? option })),
+    ]
   }, [columns])
 
   const searchFilterFn: FilterFn<ApplicationRow> = (row, _columnId, value) =>
@@ -53,31 +59,21 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-slate-700">Szukaj</span>
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="ID wniosku lub klient"
-            className="w-64 rounded border border-slate-300 px-3 py-2"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-slate-700">Status</span>
-          <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            className="rounded border border-slate-300 px-3 py-2"
-          >
-            <option value="">Wszystkie</option>
-            {statusOptions.map((option) => (
-              <option key={option} value={option}>
-                {STATUS_LABELS[option] ?? option}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Search
+          label="Szukaj"
+          value={search}
+          onValueChange={setSearch}
+          placeholder="ID wniosku lub klient"
+          className="w-64"
+          testId="applications-search"
+        />
+        <Select
+          label="Status"
+          value={status}
+          onChange={(event) => setStatus(event.target.value)}
+          options={statusFilterOptions}
+          testId="applications-status-filter"
+        />
       </div>
 
       <Table

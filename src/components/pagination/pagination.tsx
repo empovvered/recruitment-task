@@ -1,3 +1,5 @@
+import { Select } from "components/form/fields/select/select"
+
 type PaginationProps = {
   pageIndex: number
   pageCount: number
@@ -25,20 +27,15 @@ export const Pagination = ({
     </span>
     <div className="flex items-center gap-2">
       {pageSizes && pageSizes.length > 0 && (
-        <label className="flex items-center gap-2">
-          <span>Na stronę</span>
-          <select
-            value={pageSize}
-            onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="rounded border border-slate-300 px-2 py-1"
-          >
-            {pageSizes.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label="Na stronę"
+          labelPlacement="inline"
+          value={pageSize}
+          onChange={(event) => onPageSizeChange(Number(event.target.value))}
+          options={pageSizes.map((size) => ({ value: String(size), label: size }))}
+          className="px-2 py-1"
+          testId="applications-page-size"
+        />
       )}
       <button
         type="button"
