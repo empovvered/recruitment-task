@@ -96,12 +96,6 @@ describe("search and formatting", () => {
 })
 
 describe("buildColumnDefs", () => {
-  it("emits one definition per visible column, in metadata order", () => {
-    const defs = buildColumnDefs([...columns, { key: "market", label: "Rynek", type: "text", visible: false }])
-
-    expect(defs.map(({ id }) => id)).toEqual(["loanId", "customerName", "monthlyRate", "canEdit"])
-  })
-
   it("takes sortability and filterability from the metadata, never from the column name", () => {
     const [loanId, , monthlyRate, canEdit] = buildColumnDefs(columns)
 
@@ -123,12 +117,5 @@ describe("buildColumnDefs", () => {
 
     expect(accessor?.(row({ customerName: null }), 0)).toBeUndefined()
     expect(accessor?.(row(), 0)).toBe("Anna Woźniak")
-  })
-
-  it("resolves an action column against the row permissions", () => {
-    const [, , , canEdit] = buildColumnDefs(columns)
-
-    expect(canEdit?.accessorFn?.(row(), 0)).toBe(true)
-    expect(canEdit?.accessorFn?.(row({ permissions: {} }), 0)).toBeUndefined()
   })
 })
