@@ -18,6 +18,21 @@ pnpm dev       # http://localhost:3000
 
 If git reports that a hook `was ignored because it's not set as executable`, run `chmod ug+x .husky/*`.
 
+## Seeing it work
+
+The states the task asks for are reachable from the address bar, so none of them needs a code change to demonstrate:
+
+| URL                   | What it shows                           |
+| --------------------- | --------------------------------------- |
+| `/`                   | the loaded table                        |
+| `/?delay=2000`        | the loading placeholder, then the table |
+| `/?empty=1`           | the empty state                         |
+| `/?fail=1`            | the error state with a retry            |
+| `/?delay=1500&fail=1` | loading first, then the error           |
+
+The view state is in the address too, so a filtered, sorted page is a link:
+`/?status=approved&search=anna&sort=monthlyRate&order=desc&page=2`.
+
 ## Available commands
 
 | Command             | What it does                                              |
@@ -117,10 +132,32 @@ const setSearch = useCallback(
 )
 ```
 
+**Accessibility belongs to the component, not to a later pass.** The table carries a caption, every sortable header
+reports its direction through `aria-sort`, the loading state is both drawn and announced through `aria-busy` and a live
+status line, and an action the row does not permit is a genuinely disabled button rather than a greyed-out one that
+still takes focus and a click.
+
 **Let the test find the boundary.** Two defects here were written, then caught by their own tests rather than by review:
 keeping gaps at the bottom cannot live in a comparator, because the table negates a comparator result for a descending
 sort — it is `sortUndefined: "last"` on the column; and `Date.parse` returning `NaN` for a malformed date leaves the
 result of `Array.sort` unspecified, so one bad timestamp would scramble a column.
+
+## Where things live
+
+```
+src/api/apiActions/applications   the endpoint's types, schema, query options, fetcher and error
+src/api/queryClient.ts            the React Query client factory
+src/app                           the route, the panel entry, the route handler and the error file
+src/components/applicationsTable  everything that knows what an application is
+src/components/table              a table that does not: columns in, rows out
+src/components/form, search       the field vocabulary the toolbar is built from
+src/components/error, skeleton    the states, shared by every caller
+src/hooks                         the view state in the URL, and the debounce behind the search
+src/constants, types, utils       search param names, page sizes, domain unions, cn
+```
+
+Files sit next to what they serve, with the suffix saying what they are: `.types`, `.utils`, `.queries`, `.schema`,
+`.constants`, `.test`.
 
 ## Conventions
 
