@@ -3,7 +3,7 @@ import { cn } from "utils/cn"
 
 import type { ButtonProps } from "./button.types"
 
-export const buttonVariants = cva("inline-flex items-center justify-center gap-1 rounded font-medium", {
+const buttonVariants = cva("inline-flex items-center justify-center gap-1 rounded font-medium", {
   variants: {
     size: {
       small: "px-2 py-1 text-sm",

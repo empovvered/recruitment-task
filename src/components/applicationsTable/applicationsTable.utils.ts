@@ -43,7 +43,7 @@ export const formatDate = (value: string) => {
 /**
  * Diacritics are stripped so "Wozniak" finds "Woźniak"; 677 of the 1200 names carry them.
  */
-export const normalizeForSearch = (value: string) =>
+const normalizeForSearch = (value: string) =>
   value
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")

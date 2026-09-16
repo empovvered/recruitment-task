@@ -2,8 +2,6 @@ import type { ColumnFiltersState, OnChangeFn, PaginationState, SortingState } fr
 
 export const SORT_ORDERS = ["asc", "desc"] as const
 
-export type SortOrder = (typeof SORT_ORDERS)[number]
-
 export type QueryTableState = {
   sorting: SortingState
   setSorting: OnChangeFn<SortingState>
