@@ -1,3 +1,5 @@
+import { Button } from "components/button/button"
+
 import type { ErrorStateProps } from "./errorState.types"
 
 //INFO: One presentation for every failure the panel can show: a failed query, and a render that threw
@@ -12,14 +14,9 @@ export const ErrorState = ({
     <p className="font-medium text-rose-900">{title}</p>
     {description && <p className="mt-1 text-sm text-rose-800">{description}</p>}
     {onRetry && (
-      <button
-        type="button"
-        onClick={onRetry}
-        disabled={isRetrying}
-        className="mt-3 rounded bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300"
-      >
+      <Button variant="primary" testId="errorStateRetry" onClick={onRetry} isLoading={isRetrying} className="mt-3">
         {isRetrying ? "Ponawianie…" : retryLabel}
-      </button>
+      </Button>
     )}
   </div>
 )

@@ -1,5 +1,6 @@
 import type { Header } from "@tanstack/react-table"
 import { flexRender } from "@tanstack/react-table"
+import { Button } from "components/button/button"
 
 const SORT_INDICATOR = { asc: "↑", desc: "↓" } as const
 
@@ -19,16 +20,18 @@ export const TableHeadCell = <Data, Value>({ header }: { header: Header<Data, Va
       className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-slate-600 uppercase"
     >
       {canSort ? (
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
+          size="small"
+          testId={`sortBy-${header.column.id}`}
           onClick={header.column.getToggleSortingHandler()}
-          className="inline-flex items-center gap-1 rounded hover:text-slate-900"
+          className="px-0 text-inherit hover:bg-transparent hover:text-slate-900"
         >
           {label}
           <span aria-hidden="true" className="text-slate-400">
             {direction ? SORT_INDICATOR[direction] : "↕"}
           </span>
-        </button>
+        </Button>
       ) : (
         label
       )}

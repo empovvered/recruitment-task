@@ -1,3 +1,4 @@
+import { Button } from "components/button/button"
 import { Select } from "components/form/fields/select/select"
 
 type PaginationProps = {
@@ -37,22 +38,24 @@ export const Pagination = ({
           testId="applications-page-size"
         />
       )}
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="small"
+        testId="paginationPrevious"
         onClick={onPrevious}
-        disabled={pageIndex === 0}
-        className="rounded border border-slate-300 px-3 py-1 disabled:cursor-not-allowed disabled:text-slate-300"
+        isDisabled={pageIndex === 0}
       >
         Poprzednia
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button
+        variant="secondary"
+        size="small"
+        testId="paginationNext"
         onClick={onNext}
-        disabled={pageIndex >= pageCount - 1}
-        className="rounded border border-slate-300 px-3 py-1 disabled:cursor-not-allowed disabled:text-slate-300"
+        isDisabled={pageIndex >= pageCount - 1}
       >
         Następna
-      </button>
+      </Button>
     </div>
   </div>
 )
