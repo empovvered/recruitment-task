@@ -7,10 +7,11 @@ export const initialTableViewState: TableViewState = {
   sorting: [],
   columnFilters: [],
   globalFilter: "",
-  pagination: { pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE },
+  // 1-based, matching the table's external pagination contract.
+  pagination: { pageIndex: 1, pageSize: DEFAULT_PAGE_SIZE },
 }
 
-const firstPage = (state: TableViewState) => ({ ...state.pagination, pageIndex: 0 })
+const firstPage = (state: TableViewState) => ({ ...state.pagination, pageIndex: 1 })
 
 /**
  * One reducer rather than four `useState` calls, so the rule "narrowing the result returns you to

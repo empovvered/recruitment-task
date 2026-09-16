@@ -24,16 +24,21 @@ import { TableHead } from "./components/head"
 import { TableHeadCell } from "./components/headCell"
 import { TableRow } from "./components/row"
 import type { TableProps } from "./table.types"
+import { getPaginationWithoutPageIndexOffset, getPaginationWithPageIndexOffset } from "./table.utils"
 
 const LOADING_ROW_COUNT = 8
 const loadingData = Array.from({ length: LOADING_ROW_COUNT }, () => ({}))
 
 export const Table = <Data, Value>({
   className,
+  classNames,
   columns,
   data,
   isLoading = false,
   emptyState,
+  testId,
+  pageCount,
+  pageSizes,
   globalFilterFn,
   sorting,
   setSorting,
@@ -44,6 +49,7 @@ export const Table = <Data, Value>({
   pagination,
   setPagination,
 }: TableProps<Data, Value> & { globalFilterFn?: FilterFn<Data> }) => {
+  const hasPagination = Boolean(pagination && setPagination)
   /**
    * Loading swaps the cell renderers for skeletons rather than replacing the table with a spinner,
    * so the header, column widths and row count stay put and the layout does not jump on arrival.
@@ -58,24 +64,40 @@ export const Table = <Data, Value>({
   const table = useReactTable({
     data: rows,
     columns: renderedColumns,
-    state: { sorting, columnFilters, globalFilter, pagination },
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+      ...(pagination ? { pagination: getPaginationWithPageIndexOffset(pagination) } : {}),
+    },
+    pageCount,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: setPagination,
+    onPaginationChange: (updater) => {
+      if (!pagination || !setPagination) return
+
+      const zeroBased = getPaginationWithPageIndexOffset(pagination)
+      const next = typeof updater === "function" ? updater(zeroBased) : updater
+
+      setPagination(getPaginationWithoutPageIndexOffset(next))
+    },
     globalFilterFn,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    ...(hasPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
   })
 
   const bodyRows = table.getRowModel().rows
   const isEmpty = !isLoading && bodyRows.length === 0
 
   return (
-    <div className={cn("overflow-x-auto rounded-lg border border-slate-200 bg-white", className)}>
-      <table className="w-full border-collapse">
+    <div
+      data-testid={testId}
+      className={cn("overflow-x-auto rounded-lg border border-slate-200 bg-white", classNames?.wrapper, className)}
+    >
+      <table className={cn("w-full border-collapse", classNames?.table)}>
         <TableHead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -103,13 +125,16 @@ export const Table = <Data, Value>({
           )}
         </TableBody>
       </table>
-      {!isEmpty && !isLoading && (
+      {hasPagination && !isEmpty && !isLoading && (
         <Pagination
           pageIndex={table.getState().pagination.pageIndex}
           pageCount={table.getPageCount()}
+          pageSize={table.getState().pagination.pageSize}
+          pageSizes={pageSizes}
           totalRows={table.getFilteredRowModel().rows.length}
           onPrevious={table.previousPage}
           onNext={table.nextPage}
+          onPageSizeChange={table.setPageSize}
         />
       )}
     </div>

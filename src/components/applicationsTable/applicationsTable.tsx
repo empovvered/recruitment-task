@@ -6,6 +6,7 @@ import { Table } from "components/table/table"
 import { useMemo, useReducer } from "react"
 
 import { buildColumnDefs } from "./applicationsTable.columns"
+import { PAGE_SIZES } from "./applicationsTable.constants"
 import { initialTableViewState, STATUS_COLUMN_ID, tableViewReducer } from "./applicationsTable.state"
 import type { ApplicationsTableProps } from "./applicationsTable.types"
 import { getSearchableColumns, matchesSearch } from "./applicationsTable.utils"
@@ -84,6 +85,8 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
         columns={columnDefs}
         data={rows}
         isLoading={isLoading}
+        testId="applications-table"
+        pageSizes={PAGE_SIZES}
         emptyState={<p className="text-slate-500">Brak wniosków spełniających kryteria.</p>}
         globalFilterFn={searchFilterFn}
         sorting={view.sorting}

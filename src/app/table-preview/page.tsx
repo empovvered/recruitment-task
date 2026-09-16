@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query"
 import type { ApplicationsPayload } from "api/apiActions/applications/applications.types"
 import { ApplicationsTable } from "components/applicationsTable/applicationsTable"
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 /**
  * TEMPORARY preview route for the table branch. The real panel lives on `/`; delete this on merge.
  */
-const TablePreviewPage = () => {
+const TablePreview = () => {
   const searchParams = useSearchParams()
   const search = searchParams.toString()
 
@@ -38,5 +39,15 @@ const TablePreviewPage = () => {
     </main>
   )
 }
+
+/**
+ * useSearchParams opts the subtree into client-side rendering, so it needs a Suspense boundary or
+ * the prerender fails at build time — a dev server never surfaces this.
+ */
+const TablePreviewPage = () => (
+  <Suspense fallback={null}>
+    <TablePreview />
+  </Suspense>
+)
 
 export default TablePreviewPage
