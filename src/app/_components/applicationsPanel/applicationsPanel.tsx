@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query"
 import { applicationsQueries } from "api/apiActions/applications/applications.queries"
 import { ApplicationsScenario } from "api/apiActions/applications/applications.types"
 import { ApplicationsTable } from "components/applicationsTable/applicationsTable"
+import { ErrorBoundary } from "components/error/errorBoundary"
+import { ErrorFallback } from "components/error/errorFallback"
 
 type ApplicationsPanelProps = {
   scenario: ApplicationsScenario
@@ -17,12 +19,15 @@ export const ApplicationsPanel = ({ scenario }: ApplicationsPanelProps) => {
   const { data, isPending, isError, refetch } = useQuery(applicationsQueries.list(scenario))
 
   return (
-    <ApplicationsTable
-      columns={data?.columns ?? []}
-      rows={data?.rows ?? []}
-      isLoading={isPending}
-      isError={isError}
-      onRetry={() => void refetch()}
-    />
+    //INFO: A throwing row takes down the table, not the page around it, and stays recoverable
+    <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[data]}>
+      <ApplicationsTable
+        columns={data?.columns ?? []}
+        rows={data?.rows ?? []}
+        isLoading={isPending}
+        isError={isError}
+        onRetry={() => void refetch()}
+      />
+    </ErrorBoundary>
   )
 }

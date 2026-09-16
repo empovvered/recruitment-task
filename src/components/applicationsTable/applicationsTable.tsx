@@ -2,6 +2,7 @@
 
 import type { FilterFn } from "@tanstack/react-table"
 import type { ApplicationRow } from "api/apiActions/applications/applications.types"
+import { ErrorState } from "components/error/errorState"
 import { Select } from "components/form/fields/select/select"
 import { Search } from "components/search/search"
 import { Table } from "components/table/table"
@@ -42,18 +43,7 @@ export const ApplicationsTable = ({ columns, rows, isLoading, isError, onRetry }
     matchesSearch(row.original, searchableColumns, String(value))
 
   if (isError) {
-    return (
-      <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-8 text-center">
-        <p className="font-medium text-rose-900">Nie udało się pobrać wniosków.</p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="mt-3 rounded bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
-        >
-          Spróbuj ponownie
-        </button>
-      </div>
-    )
+    return <ErrorState title="Nie udało się pobrać wniosków." onRetry={onRetry} />
   }
 
   return (
