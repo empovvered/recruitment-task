@@ -66,15 +66,16 @@ Two details are worth knowing because the fixtures make them easy to get wrong:
 
 ## Technical decisions
 
-| Decision                                                | Why                                                                                                                                                                                                                 |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Route handler at `/api/applications` as the data source | The task allows a mock or a simulated request. A real `fetch` makes loading, empty and error genuine rather than staged, and the fixtures are imported server-side so the 290 KB payload never reaches the browser. |
-| `?fail=1`, `?empty=1`, `?delay=ms`                      | Every required state is reachable from the URL, so a reviewer can see all four without editing code.                                                                                                                |
-| React Query for async state                             | `isPending` / `isError` / `refetch` map onto the required states directly. `retry` is off, because the default three backed-off attempts would hide the error state behind about seven seconds of spinner.          |
-| A headless table library behind our own wrapper         | Sorting, filtering and pagination are solved problems. Feature code never imports the library, so replacing it stays a local change.                                                                                |
-| Client-side pagination, 25 rows a page                  | 1200 rows fit in memory comfortably. Virtualisation would be weight without benefit at this size.                                                                                                                   |
-| Comparators written by hand                             | "Sensible behaviour for missing values" is the graded part, so it is explicit and unit-tested rather than inherited from a default.                                                                                 |
-| Vitest and Testing Library                              | Tests assert what a user sees — a disabled action, a narrowed list — instead of component internals.                                                                                                                |
+| Decision                                                | Why                                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Route handler at `/api/applications` as the data source | The task allows a mock or a simulated request. A real `fetch` makes loading, empty and error genuine rather than staged, and the fixtures are imported server-side so the 290 KB payload never reaches the browser.                                                 |
+| `?fail=1`, `?empty=1`, `?delay=ms`                      | Every required state is reachable from the URL, so a reviewer can see all four without editing code.                                                                                                                                                                |
+| React Query for async state                             | `isPending` / `isError` / `refetch` map onto the required states directly. `retry` is off, because the default three backed-off attempts would hide the error state behind about seven seconds of spinner.                                                          |
+| A headless table library behind our own wrapper         | Sorting, filtering and pagination are solved problems. Feature code never imports the library, so replacing it stays a local change.                                                                                                                                |
+| Client-side pagination, 25 rows a page                  | 1200 rows fit in memory comfortably. Virtualisation would be weight without benefit at this size.                                                                                                                                                                   |
+| Comparators written by hand                             | "Sensible behaviour for missing values" is the graded part, so it is explicit and unit-tested rather than inherited from a default.                                                                                                                                 |
+| Fixtures parsed against a schema at the route handler   | Metadata is the one input the UI cannot recover from: an unknown column type has no cell renderer. Parsing names the offending path once, at the boundary, instead of leaving a blank column to be found by eye. It runs once per server instance, not per request. |
+| Vitest and Testing Library                              | Tests assert what a user sees — a disabled action, a narrowed list — instead of component internals.                                                                                                                                                                |
 
 ## Assumptions
 
@@ -134,14 +135,11 @@ over the staged files only), and `pre-push` runs `pnpm typecheck` and `pnpm lint
 
 ## What I would do next, with another 60–90 minutes
 
-1. **Validate the payload at the boundary.** The fixtures are cast to the domain types today. A type guard (or a schema)
-   at the route handler would turn a malformed backend response into one clear error instead of a scattering of
-   undefined cells.
-2. **Put the view state in the URL.** Sorting, the status filter, the search term and the page are local state, so a
+1. **Put the view state in the URL.** Sorting, the status filter, the search term and the page are local state, so a
    filtered view cannot be shared or survive a reload. They belong in search params.
-3. **Distinguish "no data" from "no matches".** Both render the same empty state today; the second should offer to clear
+2. **Distinguish "no data" from "no matches".** Both render the same empty state today; the second should offer to clear
    the filters.
-4. **Finish the accessibility pass.** Sorting and actions are reachable and announced, but a page change does not move
+3. **Finish the accessibility pass.** Sorting and actions are reachable and announced, but a page change does not move
    focus and the filtered row count is not announced to a screen reader.
-5. **Column visibility and ordering as a user control.** The model already supports both; only the UI is missing.
-6. **Server-side paging.** The table already takes `pageCount`, so the wiring is small once an endpoint pages.
+4. **Column visibility and ordering as a user control.** The model already supports both; only the UI is missing.
+5. **Server-side paging.** The table already takes `pageCount`, so the wiring is small once an endpoint pages.
