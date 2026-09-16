@@ -22,7 +22,9 @@
     "baseUrl": "./",
     "paths": {
       "api/*": ["api/*"],
+      "constants/*": ["constants/*"],
       "data/*": ["data/*"],
+      "providers/*": ["providers/*"],
       "types/*": ["types/*"]
     }
   },

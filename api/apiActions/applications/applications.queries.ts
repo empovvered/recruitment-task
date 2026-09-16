@@ -14,9 +14,10 @@ const buildSearchParams = ({ delayMs, fail, empty }: ApplicationsScenario) => {
   return params.toString()
 }
 
-const getApplications = async (scenario: ApplicationsScenario) => {
+const getApplications = async (scenario: ApplicationsScenario, signal: AbortSignal) => {
   const query = buildSearchParams(scenario)
-  const response = await fetch(query ? `/api/applications?${query}` : "/api/applications")
+  //INFO: The signal comes from React Query, so a dropped query stops the request instead of leaving it in flight
+  const response = await fetch(query ? `/api/applications?${query}` : "/api/applications", { signal })
 
   //INFO: React Query reports isError only when the query function throws
   if (!response.ok) throw new Error("Failed to load applications")
@@ -32,6 +33,6 @@ export const applicationsQueries = {
   list: (scenario: ApplicationsScenario) =>
     queryOptions({
       queryKey: [...applicationsQueries.lists(), scenario],
-      queryFn: () => getApplications(scenario),
+      queryFn: ({ signal }) => getApplications(scenario, signal),
     }),
 }
