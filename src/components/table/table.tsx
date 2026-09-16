@@ -14,7 +14,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { Pagination } from "components/pagination/pagination"
-import { Skeleton } from "components/skeleton/skeleton"
 import { useMemo } from "react"
 import { cn } from "utils/cn"
 
@@ -28,8 +27,8 @@ import { TableRow } from "./components/row"
 import type { TableProps } from "./table.types"
 import { getPaginationWithoutPageIndexOffset, getPaginationWithPageIndexOffset } from "./table.utils"
 
+//INFO: Only used before a page size is known; otherwise the placeholder fills the page the data will
 const LOADING_ROW_COUNT = 8
-const loadingData = Array.from({ length: LOADING_ROW_COUNT }, () => ({}))
 
 export const Table = <Data, Value>({
   className,
@@ -57,7 +56,9 @@ export const Table = <Data, Value>({
    * Loading swaps the cell renderers for skeletons rather than replacing the table with a spinner,
    * so the header, column widths and row count stay put and the layout does not jump on arrival.
    */
-  const rows = useMemo(() => (isLoading ? (loadingData as Data[]) : data), [data, isLoading])
+  const skeletonRowCount = pagination?.pageSize ?? LOADING_ROW_COUNT
+  const loadingData = useMemo(() => Array.from({ length: skeletonRowCount }, () => ({}) as Data), [skeletonRowCount])
+  const rows = useMemo(() => (isLoading ? loadingData : data), [data, isLoading, loadingData])
   const renderedColumns = useMemo(
     () => (isLoading ? columns.map((column) => ({ ...column, cell: () => <CellSkeleton /> })) : columns),
     [columns, isLoading],
@@ -132,15 +133,13 @@ export const Table = <Data, Value>({
           </TableHead>
           <TableBody>
             {isLoading && !hasColumnsToSkeleton ? (
-              <tr>
-                <td className="px-4 py-6">
-                  <span className="flex flex-col gap-3">
-                    {Array.from({ length: LOADING_ROW_COUNT }, (_, index) => (
-                      <Skeleton key={index} className="h-5 w-full" />
-                    ))}
-                  </span>
-                </td>
-              </tr>
+              Array.from({ length: skeletonRowCount }, (_, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <CellSkeleton className="w-full" />
+                  </TableCell>
+                </TableRow>
+              ))
             ) : isEmpty ? (
               <tr>
                 <td colSpan={table.getAllColumns().length} className="px-4 py-10 text-center">
