@@ -1,0 +1,97 @@
+import { render, screen, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import type { ApplicationRow, ColumnMeta } from "api/apiActions/applications/applications.types"
+
+import { ApplicationsTable } from "./applicationsTable"
+
+const columns: ColumnMeta[] = [
+  { key: "loanId", label: "ID wniosku", type: "text", sortable: true, filterable: true },
+  { key: "customerName", label: "Klient", type: "text", sortable: true, filterable: true },
+  { key: "status", label: "Status", type: "badge", sortable: true, filterable: true, options: ["new", "approved"] },
+  { key: "monthlyRate", label: "Rata", type: "currency", sortable: true },
+  { key: "hidden", label: "Ukryta", type: "text", visible: false },
+  { key: "canEdit", label: "Edycja", type: "action", action: "edit" },
+]
+
+const rows: ApplicationRow[] = [
+  {
+    loanId: "LN-1",
+    customerName: "Anna Woźniak",
+    status: "approved",
+    market: "PL",
+    monthlyRate: 1409.27,
+    updatedAt: "2026-01-22T19:00:00Z",
+    permissions: { canEdit: true },
+  },
+  {
+    loanId: "LN-2",
+    customerName: "Marcin Zieliński",
+    status: "new",
+    market: "CZ",
+    monthlyRate: null,
+    updatedAt: null,
+    permissions: { canEdit: false },
+  },
+]
+
+const rowFor = (loanId: string) => screen.getByRole("row", { name: new RegExp(loanId) })
+
+describe("ApplicationsTable", () => {
+  it("builds its header from the metadata and omits a hidden column", () => {
+    render(<ApplicationsTable columns={columns} rows={rows} />)
+
+    expect(screen.getByRole("columnheader", { name: /ID wniosku/ })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: /Rata/ })).toBeInTheDocument()
+    expect(screen.queryByRole("columnheader", { name: /Ukryta/ })).not.toBeInTheDocument()
+  })
+
+  it("disables the row action when the row lacks the permission", () => {
+    render(<ApplicationsTable columns={columns} rows={rows} />)
+
+    expect(within(rowFor("LN-1")).getByRole("button", { name: /Edytuj/ })).toBeEnabled()
+    expect(within(rowFor("LN-2")).getByRole("button", { name: /Edytuj/ })).toBeDisabled()
+  })
+
+  it("renders a placeholder instead of an empty cell for a missing value", () => {
+    render(<ApplicationsTable columns={columns} rows={rows} />)
+
+    expect(within(rowFor("LN-2")).getAllByText("—").length).toBeGreaterThan(0)
+  })
+
+  it("marks only sortable columns as sortable for assistive technology", () => {
+    render(<ApplicationsTable columns={columns} rows={rows} />)
+
+    expect(screen.getByRole("columnheader", { name: /Klient/ })).toHaveAttribute("aria-sort", "none")
+    expect(screen.getByRole("columnheader", { name: /Edycja/ })).not.toHaveAttribute("aria-sort", "ascending")
+  })
+
+  it("narrows the rows by a search written without diacritics", async () => {
+    const user = userEvent.setup()
+
+    render(<ApplicationsTable columns={columns} rows={rows} />)
+    await user.type(screen.getByRole("searchbox", { name: /Szukaj/ }), "wozniak")
+
+    expect(screen.getByText("LN-1")).toBeInTheDocument()
+    expect(screen.queryByText("LN-2")).not.toBeInTheDocument()
+  })
+
+  it("filters by the status taken from the metadata options", async () => {
+    const user = userEvent.setup()
+
+    render(<ApplicationsTable columns={columns} rows={rows} />)
+    await user.selectOptions(screen.getByRole("combobox", { name: /Status/ }), "new")
+
+    expect(screen.getByText("LN-2")).toBeInTheDocument()
+    expect(screen.queryByText("LN-1")).not.toBeInTheDocument()
+  })
+
+  it("offers a retry from the error state", async () => {
+    const user = userEvent.setup()
+    const onRetry = vi.fn()
+
+    render(<ApplicationsTable columns={columns} rows={[]} isError onRetry={onRetry} />)
+    await user.click(screen.getByRole("button", { name: /Spróbuj ponownie/ }))
+
+    expect(onRetry).toHaveBeenCalledOnce()
+  })
+})

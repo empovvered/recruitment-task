@@ -1,5 +1,9 @@
 "use client"
 
+//INFO: Prevents the React Compiler from memoizing the table; useReactTable returns functions that
+//cannot be memoized safely, which would leave stale UI.
+"use no memo"
+
 import type { FilterFn } from "@tanstack/react-table"
 import {
   flexRender,
@@ -50,6 +54,7 @@ export const Table = <Data, Value>({
     [columns, isLoading],
   )
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: rows,
     columns: renderedColumns,
