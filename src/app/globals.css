@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
+/*
+  The panel is written in a single light palette. The scaffold shipped a dark override that only
+  repainted the page behind components that stayed light, which left the heading and the field
+  labels unreadable. One committed scheme is cheaper here than a second set of tokens.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f1f5f9;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -12,15 +17,8 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
