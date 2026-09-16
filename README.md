@@ -75,6 +75,9 @@ Two details are worth knowing because the fixtures make them easy to get wrong:
 | Client-side pagination, 25 rows a page                  | 1200 rows fit in memory comfortably. Virtualisation would be weight without benefit at this size.                                                                                                                                                                   |
 | Comparators written by hand                             | "Sensible behaviour for missing values" is the graded part, so it is explicit and unit-tested rather than inherited from a default.                                                                                                                                 |
 | Fixtures parsed against a schema at the route handler   | Metadata is the one input the UI cannot recover from: an unknown column type has no cell renderer. Parsing names the offending path once, at the boundary, instead of leaving a blank column to be found by eye. It runs once per server instance, not per request. |
+| The whole view state lives in search params             | Sorting, the status filter, the search term and the page are in the URL, so a filtered view is a link: it survives a reload, it can be pasted into a bug report, and the back button walks the states a reviewer went through. One hook owns the mapping.           |
+| An error boundary around the table                      | A failed request is only half of error handling. A row that throws while rendering would otherwise replace the page with the framework's default screen; instead the table falls back to a message with a retry and the page around it survives.                    |
+| The search term is debounced                            | Every keystroke would otherwise re-filter 1200 rows and write the address bar. Debouncing means the work happens once the typing settles, and a seven letter query leaves one URL entry rather than seven.                                                          |
 | Vitest and Testing Library                              | Tests assert what a user sees — a disabled action, a narrowed list — instead of component internals.                                                                                                                                                                |
 
 ## Assumptions
@@ -99,13 +102,17 @@ default: {
 }
 ```
 
-**A rule lives in exactly one place.** "Narrowing the result returns you to page one" is a single reducer transition.
-Spread across four `useState` calls it has to be repeated at every call site, and the site that forgets strands the user
-on an empty page twelve of three:
+**A rule lives in exactly one place.** "Narrowing the result returns you to page one" is written once, in the hook that
+owns the view state. Spread across the call sites it has to be repeated at each, and the one that forgets strands the
+user on an empty page twelve of three:
 
 ```ts
-case "setSearch":
-  return { ...state, globalFilter: action.search, pagination: firstPage(state) }
+const setSearch = useCallback(
+  (search: string) => {
+    void setParams({ [SearchParams.Search]: search || null, [SearchParams.Page]: DEFAULT_PAGE_INDEX })
+  },
+  [setParams],
+)
 ```
 
 **Let the test find the boundary.** Two defects here were written, then caught by their own tests rather than by review:
@@ -135,11 +142,12 @@ over the staged files only), and `pre-push` runs `pnpm typecheck` and `pnpm lint
 
 ## What I would do next, with another 60–90 minutes
 
-1. **Put the view state in the URL.** Sorting, the status filter, the search term and the page are local state, so a
-   filtered view cannot be shared or survive a reload. They belong in search params.
-2. **Distinguish "no data" from "no matches".** Both render the same empty state today; the second should offer to clear
-   the filters.
-3. **Finish the accessibility pass.** Sorting and actions are reachable and announced, but a page change does not move
+1. **Distinguish "no data" from "no matches".** Both render the same empty state today; the second should say which
+   filter is responsible and offer to clear it.
+2. **Finish the accessibility pass.** Sorting and actions are reachable and announced, but a page change does not move
    focus and the filtered row count is not announced to a screen reader.
+3. **Extract a button the way the fields were extracted.** The retry, the row action, the two pagination arrows and the
+   sort toggle are still raw elements, each carrying its own border, padding and disabled classes.
 4. **Column visibility and ordering as a user control.** The model already supports both; only the UI is missing.
-5. **Server-side paging.** The table already takes `pageCount`, so the wiring is small once an endpoint pages.
+5. **Server-side paging, filtering and sorting.** The table already takes `pageCount` and the view state is already in
+   the URL, so the query layer is the only part that changes once an endpoint pages.
