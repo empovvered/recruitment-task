@@ -1,0 +1,54 @@
+import { queryOptions } from "@tanstack/react-query"
+
+import { ApplicationsRequestError } from "./applications.errors"
+import { ApplicationsPayload, ApplicationsScenario } from "./applications.types"
+
+const buildSearchParams = ({ delayMs, fail, empty }: ApplicationsScenario) => {
+  const params = new URLSearchParams()
+
+  if (delayMs) params.set("delay", String(delayMs))
+
+  if (fail) params.set("fail", "1")
+
+  if (empty) params.set("empty", "1")
+
+  return params.toString()
+}
+
+const FALLBACK_ERROR_MESSAGE = "Serwer nie zwrócił powodu niepowodzenia."
+
+//INFO: A failing response need not carry a body, and a proxy can answer with something that is not JSON
+const readErrorMessage = async (response: Response) => {
+  try {
+    const body = (await response.json()) as { message?: unknown }
+    //INFO: An empty string is a present-but-useless message; it would blank the reason the user sees
+    const message = typeof body.message === "string" ? body.message.trim() : ""
+
+    return message || FALLBACK_ERROR_MESSAGE
+  } catch {
+    return FALLBACK_ERROR_MESSAGE
+  }
+}
+
+const getApplications = async (scenario: ApplicationsScenario, signal: AbortSignal) => {
+  const query = buildSearchParams(scenario)
+  //INFO: The signal comes from React Query, so a dropped query stops the request instead of leaving it in flight
+  const response = await fetch(query ? `/api/applications?${query}` : "/api/applications", { signal })
+
+  //INFO: React Query reports isError only when the query function throws
+  if (!response.ok) throw new ApplicationsRequestError(await readErrorMessage(response))
+
+  return (await response.json()) as ApplicationsPayload
+}
+
+export const applicationsQueries = {
+  all: () => ["applications"],
+  lists: () => [...applicationsQueries.all(), "lists"],
+  //INFO: The scenario belongs in the key: the client does not remount on a search param change, so a
+  //bare key would keep serving the cached success instead of refetching
+  list: (scenario: ApplicationsScenario) =>
+    queryOptions({
+      queryKey: [...applicationsQueries.lists(), scenario],
+      queryFn: ({ signal }) => getApplications(scenario, signal),
+    }),
+}
