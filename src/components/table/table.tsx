@@ -14,10 +14,12 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { Pagination } from "components/pagination/pagination"
+import { Skeleton } from "components/skeleton/skeleton"
 import { useMemo } from "react"
 import { cn } from "utils/cn"
 
 import { TableBody } from "./components/body"
+import { TableCaption } from "./components/caption"
 import { TableCell } from "./components/cell/cell"
 import { CellSkeleton } from "./components/cell/cell.loading"
 import { TableHead } from "./components/head"
@@ -36,6 +38,7 @@ export const Table = <Data, Value>({
   data,
   isLoading = false,
   emptyState,
+  caption,
   testId,
   pageCount,
   pageSizes,
@@ -94,6 +97,12 @@ export const Table = <Data, Value>({
 
   const bodyRows = table.getRowModel().rows
   const isEmpty = !isLoading && bodyRows.length === 0
+  /**
+   * The columns arrive with the rows, so the first load has nothing to hang per-cell skeletons on and
+   * the swapped renderers produce eight empty rows. Until the metadata is known the placeholder is a
+   * stack of bars, which reads as loading rather than as a table that failed to fill.
+   */
+  const hasColumnsToSkeleton = table.getAllColumns().length > 0
 
   return (
     <div
@@ -106,6 +115,7 @@ export const Table = <Data, Value>({
         {isLoading ? "Ładowanie wniosków" : `Załadowano ${table.getFilteredRowModel().rows.length} wniosków`}
       </p>
       <table className={cn("w-full border-collapse", classNames?.table)}>
+        <TableCaption className="sr-only">{caption}</TableCaption>
         <TableHead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -116,7 +126,17 @@ export const Table = <Data, Value>({
           ))}
         </TableHead>
         <TableBody>
-          {isEmpty ? (
+          {isLoading && !hasColumnsToSkeleton ? (
+            <tr>
+              <td className="px-4 py-6">
+                <span className="flex flex-col gap-3">
+                  {Array.from({ length: LOADING_ROW_COUNT }, (_, index) => (
+                    <Skeleton key={index} className="h-5 w-full" />
+                  ))}
+                </span>
+              </td>
+            </tr>
+          ) : isEmpty ? (
             <tr>
               <td colSpan={table.getAllColumns().length} className="px-4 py-10 text-center">
                 {emptyState}

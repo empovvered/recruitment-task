@@ -144,10 +144,9 @@ over the staged files only), and `pre-push` runs `pnpm typecheck` and `pnpm lint
 
 1. **Distinguish "no data" from "no matches".** Both render the same empty state today; the second should say which
    filter is responsible and offer to clear it.
-2. **Finish the accessibility pass.** Sorting and actions are reachable and announced, but a page change does not move
-   focus and the filtered row count is not announced to a screen reader.
-3. **Extract a button the way the fields were extracted.** The retry, the row action, the two pagination arrows and the
-   sort toggle are still raw elements, each carrying its own border, padding and disabled classes.
-4. **Column visibility and ordering as a user control.** The model already supports both; only the UI is missing.
-5. **Server-side paging, filtering and sorting.** The table already takes `pageCount` and the view state is already in
+2. **Finish the accessibility pass.** A page change does not move focus back to the top of the table, the reason an
+   action is disabled is carried by `title` alone, which assistive technology often skips, and the pagination controls
+   are not a labelled region.
+3. **Column visibility and ordering as a user control.** The model already supports both; only the UI is missing.
+4. **Server-side paging, filtering and sorting.** The table already takes `pageCount` and the view state is already in
    the URL, so the query layer is the only part that changes once an endpoint pages.

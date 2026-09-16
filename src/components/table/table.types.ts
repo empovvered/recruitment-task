@@ -17,6 +17,8 @@ export type TableProps<Data, Value> = {
   /** While true the cells render skeletons, so the table keeps its shape instead of collapsing. */
   isLoading?: boolean
   emptyState: ReactNode
+  /** Required: without it a screen reader announces the table with no idea what it lists. */
+  caption: string
   testId?: string
   /** Supplied by the caller when the page count comes from a backend rather than the loaded rows. */
   pageCount?: number

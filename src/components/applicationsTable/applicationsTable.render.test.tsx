@@ -114,4 +114,10 @@ describe("ApplicationsTable", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent(`Załadowano ${rows.length} wniosków`)
   })
+
+  it("gives the table an accessible name, so it is not announced as an unlabelled grid", () => {
+    render(<ApplicationsTable columns={columns} rows={rows} />)
+
+    expect(screen.getByRole("table", { name: "Lista wniosków kredytowych" })).toBeInTheDocument()
+  })
 })

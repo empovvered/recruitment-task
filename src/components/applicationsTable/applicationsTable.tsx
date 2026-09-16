@@ -76,6 +76,7 @@ export const ApplicationsTable = ({
       <Table
         columns={columnDefs}
         data={rows}
+        caption="Lista wniosków kredytowych"
         isLoading={isLoading}
         testId="applications-table"
         pageSizes={PAGE_SIZES}
