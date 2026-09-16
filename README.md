@@ -1,7 +1,10 @@
 # Recruitment task
 
-Proof of concept built on Next.js 16 (App Router), React 19 and Tailwind CSS 4. Formatting, linting, commit conventions
-and git hooks are configured and enforced; see Conventions below. Kept to what a POC actually needs.
+A small panel listing loan applications, where the table is driven by column metadata rather than a hand-written list of
+columns: labels, order, visibility, value types and action availability all come from `data/columns.json`.
+
+Built on Next.js 16 (App Router), React 19 and Tailwind CSS 4. Formatting, linting, commit conventions and git hooks are
+configured and enforced; see Conventions below. Kept to what a POC actually needs.
 
 ## Setup
 
@@ -27,6 +30,87 @@ If git reports that a hook `was ignored because it's not set as executable`, run
 | `pnpm format`       | Rewrite the tree with Prettier                            |
 | `pnpm format:check` | Fail if anything is not Prettier-formatted                |
 | `pnpm typecheck`    | Generate Next's route types, then type-check with no emit |
+| `pnpm test`         | Run the test suite once                                   |
+| `pnpm test:watch`   | Run the test suite in watch mode                          |
+
+## The metadata model
+
+Columns are described in one place, as a union discriminated on `type`:
+
+```ts
+type BaseColumn = {
+  key: string
+  label: string
+  sortable?: boolean // absent means the column cannot be sorted
+  filterable?: boolean // absent means it takes part in neither the status filter nor the search
+  visible?: boolean // absent means visible
+  order?: number // absent means "position in the metadata array"
+}
+
+export type ColumnMeta =
+  | (BaseColumn & { type: "text" | "number" | "currency" | "date" })
+  | (BaseColumn & { type: "badge"; options: readonly string[] })
+  | (BaseColumn & { type: "action"; action: "edit" | "view" | "delete" })
+```
+
+`buildColumnDefs(metadata)` turns that into the table's column definitions: accessor, comparator, sort and filter flags,
+and a cell renderer per type. Nothing downstream of it names a column.
+
+Two details are worth knowing because the fixtures make them easy to get wrong:
+
+- **`visible` and `order` are not in the fixtures.** They are optional in the model with the defaults above, so the
+  behaviour the task asks for exists without editing the supplied data.
+- **An action column names a permission, not a field.** `{ key: "canEdit", type: "action" }` is read from
+  `row.permissions.canEdit`; `row.canEdit` does not exist. Reading the row directly disables every action on every row,
+  which looks like working code. One function, `readCellValue`, is the only place that distinction lives.
+
+## Technical decisions
+
+| Decision                                                | Why                                                                                                                                                                                                                 |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Route handler at `/api/applications` as the data source | The task allows a mock or a simulated request. A real `fetch` makes loading, empty and error genuine rather than staged, and the fixtures are imported server-side so the 290 KB payload never reaches the browser. |
+| `?fail=1`, `?empty=1`, `?delay=ms`                      | Every required state is reachable from the URL, so a reviewer can see all four without editing code.                                                                                                                |
+| React Query for async state                             | `isPending` / `isError` / `refetch` map onto the required states directly. `retry` is off, because the default three backed-off attempts would hide the error state behind about seven seconds of spinner.          |
+| A headless table library behind our own wrapper         | Sorting, filtering and pagination are solved problems. Feature code never imports the library, so replacing it stays a local change.                                                                                |
+| Client-side pagination, 25 rows a page                  | 1200 rows fit in memory comfortably. Virtualisation would be weight without benefit at this size.                                                                                                                   |
+| Comparators written by hand                             | "Sensible behaviour for missing values" is the graded part, so it is explicit and unit-tested rather than inherited from a default.                                                                                 |
+| Vitest and Testing Library                              | Tests assert what a user sees — a disabled action, a narrowed list — instead of component internals.                                                                                                                |
+
+## Assumptions
+
+- **Currency is derived from `market`** (`PL→PLN`, `CZ→CZK`, `DE/SK→EUR`, `RO→RON`), because the rows carry an amount
+  but no currency. An unknown market renders a plain number rather than guessing.
+- **`updatedAt` is ISO UTC** and is rendered in `pl-PL` in UTC, so the displayed day does not shift with the viewer's
+  timezone.
+- **Missing values render as `—`** and sort last in both directions.
+- The fixtures contain no nulls, so the missing-value behaviour is covered by test fixtures of our own.
+
+## Principles this solution follows
+
+**Make the compiler carry the rule.** The column union is discriminated on `type`, and the cell renderer ends in a
+`never` assignment. Adding a column type to the metadata without teaching the renderer about it is a build error, not a
+blank cell found in review:
+
+```ts
+default: {
+  const exhaustive: never = column
+  return exhaustive
+}
+```
+
+**A rule lives in exactly one place.** "Narrowing the result returns you to page one" is a single reducer transition.
+Spread across four `useState` calls it has to be repeated at every call site, and the site that forgets strands the user
+on an empty page twelve of three:
+
+```ts
+case "setSearch":
+  return { ...state, globalFilter: action.search, pagination: firstPage(state) }
+```
+
+**Let the test find the boundary.** Two defects here were written, then caught by their own tests rather than by review:
+keeping gaps at the bottom cannot live in a comparator, because the table negates a comparator result for a descending
+sort — it is `sortUndefined: "last"` on the column; and `Date.parse` returning `NaN` for a malformed date leaves the
+result of `Array.sort` unspecified, so one bad timestamp would scramble a column.
 
 ## Conventions
 
@@ -47,3 +131,17 @@ Prettier owns formatting: no semicolons, double quotes, 120 columns, trailing co
 
 Two hooks keep this honest: `pre-commit` runs lint-staged (`pnpm typecheck`, plus `eslint --fix` and `prettier --write`
 over the staged files only), and `pre-push` runs `pnpm typecheck` and `pnpm lint` over the whole repository.
+
+## What I would do next, with another 60–90 minutes
+
+1. **Validate the payload at the boundary.** The fixtures are cast to the domain types today. A type guard (or a schema)
+   at the route handler would turn a malformed backend response into one clear error instead of a scattering of
+   undefined cells.
+2. **Put the view state in the URL.** Sorting, the status filter, the search term and the page are local state, so a
+   filtered view cannot be shared or survive a reload. They belong in search params.
+3. **Distinguish "no data" from "no matches".** Both render the same empty state today; the second should offer to clear
+   the filters.
+4. **Finish the accessibility pass.** Sorting and actions are reachable and announced, but a page change does not move
+   focus and the filtered row count is not announced to a screen reader.
+5. **Column visibility and ordering as a user control.** The model already supports both; only the UI is missing.
+6. **Server-side paging.** The table already takes `pageCount`, so the wiring is small once an endpoint pages.
