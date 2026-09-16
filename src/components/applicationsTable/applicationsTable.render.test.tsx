@@ -1,4 +1,5 @@
 import userEvent from "@testing-library/user-event"
+import { ApplicationsRequestError } from "api/apiActions/applications/applications.errors"
 import type { ApplicationRow, ColumnMeta } from "api/apiActions/applications/applications.types"
 import { render, screen, waitFor, within } from "tests"
 
@@ -37,6 +38,23 @@ const rows: ApplicationRow[] = [
 const rowFor = (loanId: string) => screen.getByRole("row", { name: new RegExp(loanId) })
 
 describe("ApplicationsTable", () => {
+  it("says what the server reported instead of a generic line", () => {
+    const error = new ApplicationsRequestError(500, "Usługa wniosków jest chwilowo niedostępna.")
+
+    render(<ApplicationsTable columns={[]} rows={[]} isError error={error} />)
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Usługa wniosków jest chwilowo niedostępna.")
+  })
+
+  it("falls back to the generic line when the thrown value is not ours", () => {
+    render(<ApplicationsTable columns={[]} rows={[]} isError error={new Error("TypeError: failed to fetch")} />)
+
+    const alert = screen.getByRole("alert")
+
+    expect(alert).toHaveTextContent("Nie udało się pobrać wniosków.")
+    expect(alert).not.toHaveTextContent("failed to fetch")
+  })
+
   //INFO: A pasted link can name a column the metadata has not delivered yet; the table must not be
   //handed a sort or a filter for a column that does not exist
   it("ignores a sort from the URL until the column it names exists", () => {

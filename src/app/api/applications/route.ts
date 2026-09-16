@@ -26,7 +26,7 @@ export const GET = async (request: Request) => {
    */
   if (!parsedPayload.success) {
     return Response.json(
-      { message: "The applications fixtures do not match the expected contract.", issues: parsedPayload.error.issues },
+      { message: "Dane wejściowe nie odpowiadają oczekiwanemu kontraktowi.", issues: parsedPayload.error.issues },
       { status: 500 },
     )
   }
@@ -37,7 +37,7 @@ export const GET = async (request: Request) => {
   if (delayMs > 0) await wait(delayMs)
 
   if (searchParams.get("fail") === "1") {
-    return Response.json({ message: "The applications service is unavailable." }, { status: 500 })
+    return Response.json({ message: "Usługa wniosków jest chwilowo niedostępna." }, { status: 500 })
   }
 
   const { columns, rows } = parsedPayload.data

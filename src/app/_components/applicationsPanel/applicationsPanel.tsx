@@ -16,7 +16,7 @@ type ApplicationsPanelProps = {
  * testable without a network and the data layer stays free to change underneath it.
  */
 export const ApplicationsPanel = ({ scenario }: ApplicationsPanelProps) => {
-  const { data, isPending, isError, isFetching, refetch } = useQuery(applicationsQueries.list(scenario))
+  const { data, isPending, isError, isFetching, error, refetch } = useQuery(applicationsQueries.list(scenario))
 
   return (
     //INFO: A throwing row takes down the table, not the page around it, and stays recoverable
@@ -26,6 +26,7 @@ export const ApplicationsPanel = ({ scenario }: ApplicationsPanelProps) => {
         rows={data?.rows ?? []}
         isLoading={isPending}
         isError={isError}
+        error={error}
         isRetrying={isFetching}
         onRetry={() => void refetch()}
       />

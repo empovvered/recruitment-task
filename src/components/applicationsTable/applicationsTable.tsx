@@ -1,6 +1,7 @@
 "use client"
 
 import type { FilterFn } from "@tanstack/react-table"
+import { isApplicationsRequestError } from "api/apiActions/applications/applications.errors"
 import type { ApplicationRow } from "api/apiActions/applications/applications.types"
 import { ErrorState } from "components/error/errorState"
 import { Select } from "components/form/fields/select/select"
@@ -26,6 +27,7 @@ export const ApplicationsTable = ({
   rows,
   isLoading,
   isError,
+  error,
   isRetrying,
   onRetry,
 }: ApplicationsTableProps) => {
@@ -63,7 +65,14 @@ export const ApplicationsTable = ({
     matchesSearch(row.original, searchableColumns, String(value))
 
   if (isError) {
-    return <ErrorState title="Nie udało się pobrać wniosków." onRetry={onRetry} isRetrying={isRetrying} />
+    return (
+      <ErrorState
+        title="Nie udało się pobrać wniosków."
+        description={isApplicationsRequestError(error) ? error.message : undefined}
+        onRetry={onRetry}
+        isRetrying={isRetrying}
+      />
+    )
   }
 
   return (
