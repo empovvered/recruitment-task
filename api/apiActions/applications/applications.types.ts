@@ -31,3 +31,9 @@ export type ApplicationsPayload = {
   columns: ColumnMeta[]
   rows: ApplicationRow[]
 }
+
+export type ApplicationsScenario = {
+  delayMs?: number
+  fail?: boolean
+  empty?: boolean
+}
