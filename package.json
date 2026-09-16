@@ -18,7 +18,7 @@
   },
   "lint-staged": {
     "**/*.ts?(x)": [
-      "bash -c 'tsc --pretty --noEmit'"
+      "bash -c 'pnpm typecheck'"
     ],
     "**/*.{js,jsx,ts,tsx,md}": [
       "eslint --fix",

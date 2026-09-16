@@ -45,5 +45,5 @@ Prettier owns formatting: no semicolons, double quotes, 120 columns, trailing co
 `prettier-plugin-tailwindcss`. ESLint layers the Next.js core-web-vitals and TypeScript presets on top, and adds
 `prettier/prettier`, sorted imports, `@stylistic` blank-line rules, `type` over `interface`, and a ban on `any`.
 
-Two hooks keep this honest: `pre-commit` runs lint-staged (`tsc`, `eslint --fix`, `prettier --write` over the staged
-files only), and `pre-push` runs `pnpm typecheck` and `pnpm lint` over the whole repository.
+Two hooks keep this honest: `pre-commit` runs lint-staged (`pnpm typecheck`, plus `eslint --fix` and `prettier --write`
+over the staged files only), and `pre-push` runs `pnpm typecheck` and `pnpm lint` over the whole repository.
